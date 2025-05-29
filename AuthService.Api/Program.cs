@@ -1,9 +1,13 @@
+using AuthService.Api.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+builder.Services.MyCustomeExtensionService(builder.Configuration);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -18,6 +22,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

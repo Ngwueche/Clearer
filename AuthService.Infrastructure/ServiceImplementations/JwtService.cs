@@ -5,7 +5,7 @@ using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-namespace AuthService.Infrastructure.Utilities
+namespace AuthService.Infrastructure.ServiceImplementations
 {
     public class JwtService : IJwtService
     {

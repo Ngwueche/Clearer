@@ -2,7 +2,7 @@
 using AuthService.Application.RepositoryInterfaces;
 using AuthService.Data.EFCore;
 using AuthService.Domain.Entities;
-using AuthService.Infrastructure.Implementations;
+using AuthService.Infrastructure.ServiceImplementations;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Infrastructure.RepositoryImplementations

@@ -5,10 +5,8 @@ using AuthService.Application.Interfaces;
 using AuthService.Application.RepositoryInterfaces;
 using AuthService.Data.EFCore;
 using AuthService.Domain.Entities;
-using AuthService.Infrastructure.Implementations;
 using AuthService.Infrastructure.RepositoryImplementations;
 using AuthService.Infrastructure.ServiceImplementations;
-using AuthService.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +29,8 @@ public static class ServiceRegistry
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
+        })
+            .AddJwtBearer(options =>
         {
             options.SaveToken = true;
             options.RequireHttpsMetadata = false; // Set to true in production
@@ -78,8 +77,9 @@ public static class ServiceRegistry
             {
                 Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                 Name = "Authorization",
+                BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
+                Type = SecuritySchemeType.Http,
                 Scheme = "Bearer"
             });
 

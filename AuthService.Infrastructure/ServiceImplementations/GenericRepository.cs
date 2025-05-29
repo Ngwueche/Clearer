@@ -3,7 +3,7 @@ using AuthService.Application.Interfaces;
 using AuthService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuthService.Infrastructure.Implementations
+namespace AuthService.Infrastructure.ServiceImplementations
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntities
     {
