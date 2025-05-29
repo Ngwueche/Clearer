@@ -1,4 +1,6 @@
-﻿using AuthService.Domain.Entities;
+﻿
+
+using AuthService.Domain.Entities;
 
 namespace AuthService.Application.RepositoryInterfaces
 {
