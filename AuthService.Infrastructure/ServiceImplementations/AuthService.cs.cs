@@ -33,7 +33,7 @@ namespace AuthService.Infrastructure.ServiceImplementations
         {
             try
             {
-                var existingUser = await _userRepository.GetActiveUserByUsernameAsync(dto.UserName, true);
+                var existingUser = await _userRepository.GetUserByUsernameAsync(dto.UserName, true);
                 if (existingUser != null)
                 {
                     return ApiResponseExtensions.Fail("43", $"User with username {dto.UserName} already exists.");
@@ -73,7 +73,7 @@ namespace AuthService.Infrastructure.ServiceImplementations
                 {
                     return ApiResponseExtensions.Fail("40", $"Username cannot be null.");
                 }
-                var user = await _userRepository.GetActiveUserByUsernameAsync(username, false);
+                var user = await _userRepository.GetUserByUsernameAsync(username, false);
                 if (user == null)
                 {
                     return ApiResponseExtensions.Fail("43", $"User with username {username} does not exist.");
@@ -91,11 +91,51 @@ namespace AuthService.Infrastructure.ServiceImplementations
             }
         }
 
+        public async Task<ApiResponse> DeleteUserAsync(string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    return ApiResponseExtensions.Fail("40", $"Username cannot be null.");
+                }
+                var user = await _userRepository.GetUserByUsernameAsync(username, false);
+                if (user == null)
+                {
+                    return ApiResponseExtensions.Fail("43", $"User with username {username} does not exist.");
+                }
+
+                var result = await _userRepository.DeleteUserAccount(user.Id);
+                if (result != "20")
+                {
+                    return ApiResponseExtensions.Fail("43", $"Unable to delete this user, try again later.");
+                }
+                _dbContext.SaveChanges();
+                _cache.Remove($"{USER_CACHE_KEY_PREFIX}{username}");
+
+                return ApiResponseExtensions.Success("00", "User Deleted successfully");
+            }
+            catch
+            {
+                return ApiResponseExtensions.Fail("99", "Service not available, try again later.");
+            }
+        }
+
         public async Task<ApiResponse> LoginAsync(string username, string password)
         {
             try
             {
-                var user = await _userRepository.GetActiveUserByUsernameAsync(username, false);
+                var user = await _userRepository.GetUserByUsernameAsync(username, false);
+                if (user is null)
+                {
+                    return ApiResponseExtensions.Fail("40", "User record not found. Kindly register.");
+                }
+
+                if (user is not null && !user.IsActive)
+                {
+                    return ApiResponseExtensions.Fail("40", "User is deactivated. Contact admin.");
+                }
+
                 if (user == null || !PasswordHelper.VerifyPassword(password, user.PasswordHash))
                 {
                     return ApiResponseExtensions.Fail("40", "Invalid username and password combination");
@@ -111,8 +151,8 @@ namespace AuthService.Infrastructure.ServiceImplementations
 
                 user.IsLoggedIn = true;
 
-                _userRepository.UpdateUser(user);
-
+                await _userRepository.UpdateUser(user);
+                await _dbContext.SaveChangesAsync();
                 var jwtDto = new JwtDto
                 {
                     FirstName = user.FirstName,
@@ -124,7 +164,7 @@ namespace AuthService.Infrastructure.ServiceImplementations
                 };
 
                 var loginDto = LoginDtoBuilder(jwtDto, refreshToken);
-                AddUserToCache(jwtDto, refreshToken);
+                AddUserToCache(jwtDto, $"{USER_CACHE_KEY_PREFIX}{refreshToken}");
                 return ApiResponseExtensions.Success("00", "Success", loginDto);
             }
             catch
@@ -141,7 +181,7 @@ namespace AuthService.Infrastructure.ServiceImplementations
                 {
                     return ApiResponseExtensions.Fail("40", $"Username cannot be null.");
                 }
-                var user = await _userRepository.GetActiveUserByUsernameAsync(username, false);
+                var user = await _userRepository.GetUserByUsernameAsync(username, false);
                 if (user == null)
                 {
                     return ApiResponseExtensions.Fail("40", $"User with username {username} not found.");
@@ -250,7 +290,7 @@ namespace AuthService.Infrastructure.ServiceImplementations
                 if (_cache.TryGetValue(cacheKey, out UserDto cachedUser))
                     return cachedUser;
 
-                var user = await _userRepository.GetActiveUserByUsernameAsync(username, false);
+                var user = await _userRepository.GetUserByUsernameAsync(username, false);
                 if (user == null) return null;
 
                 var userDto = new UserDto

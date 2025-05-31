@@ -10,6 +10,7 @@ namespace AuthService.Application.Interfaces
     public interface IAuthService
     {
         Task<ApiResponse> DeactivateUserAsync(string username);
+        Task<ApiResponse> DeleteUserAsync(string username);
         Task<ApiResponse> LoginAsync(string username, string password);
         Task<ApiResponse> LogOutAsync(string username);
         Task<ApiResponse> RefreshTokenAsync(string username, string refreshToken);
