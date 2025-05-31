@@ -1,7 +1,7 @@
 
 # AuthService
 
-**AuthService** is a .NET Core-based authentication microservice that provides:
+**AuthService** is a .NET 9.0 Core-based authentication microservice that provides:
 
 - Secure login
 - User registration
