@@ -5,11 +5,11 @@ namespace AuthService.Application.Interfaces
 {
     public interface IGenericRepository<T> where T : BaseEntities
     {
-        void Create(T entity);
+        Task Create(T entity);
         IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression,
         bool trackChanges);
-        void Update(T entity);
-        void Delete(T entity);
+        Task Update(T entity);
+        Task Delete(T entity);
 
     }
 }

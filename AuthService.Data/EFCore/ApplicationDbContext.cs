@@ -9,5 +9,6 @@ namespace AuthService.Data.EFCore
             : base(options) { }
 
         public DbSet<ApplicationUser> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
     }
 }

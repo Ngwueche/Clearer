@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using AuthService.Api.Globals;
 using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 using AuthService.Application.RepositoryInterfaces;
@@ -9,7 +10,6 @@ using AuthService.Infrastructure.RepositoryImplementations;
 using AuthService.Infrastructure.ServiceImplementations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -23,6 +23,12 @@ public static class ServiceRegistry
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
+        services.AddAuthorization(options =>
+        {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser().Build();
+            options.AddPolicy("AdminOnly", policy =>
+                  policy.RequireRole("Admin"));
+        });
 
         services.AddAuthentication(options =>
         {
@@ -30,21 +36,21 @@ public static class ServiceRegistry
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
         })
-            .AddJwtBearer(options =>
+
+        .AddJwtBearer(options =>
         {
             options.SaveToken = true;
             options.RequireHttpsMetadata = false; // Set to true in production
-            options.TokenValidationParameters = new TokenValidationParameters
+            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
+                ValidateIssuer = false,
+                ValidateAudience = false,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = configuration["JwtSettings:ValidIssuer"],
+                ValidIssuer = configuration["JwtSettings:ValidAudience"],
                 ValidAudience = configuration["JwtSettings:ValidAudience"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"])),
-                ClockSkew = TimeSpan.Zero
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"])),
+                ClockSkew = TimeSpan.FromMinutes(5)
             };
 
             // Add events for debugging
@@ -54,6 +60,7 @@ public static class ServiceRegistry
                 {
                     var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                     logger.LogError("Authentication failed: {Error}", context.Exception);
+                    logger.LogError("Authentication failed Message: {Error}", context.Exception.Message);
                     return Task.CompletedTask;
                 },
                 OnTokenValidated = context =>
@@ -79,13 +86,12 @@ public static class ServiceRegistry
                 Name = "Authorization",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Type = SecuritySchemeType.Http,
+                Type = SecuritySchemeType.ApiKey,
                 Scheme = "Bearer"
             });
 
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-            {
+            {{
                 new OpenApiSecurityScheme
                 {
                     Reference = new OpenApiReference
@@ -94,9 +100,8 @@ public static class ServiceRegistry
                         Id = "Bearer"
                     }
                 },
-                Array.Empty<string>()
-            }
-            });
+                new List<string>()
+            }});
         });
 
         services.AddCors(options =>
@@ -111,6 +116,10 @@ public static class ServiceRegistry
                 });
         });
 
+        services.AddControllers(options =>
+        {
+            options.Filters.Add(new ValidateModelAttribute());
+        });
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();

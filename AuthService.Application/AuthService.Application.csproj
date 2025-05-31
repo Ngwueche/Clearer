@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AuthService.Domain\AuthService.Domain.csproj" />
-    <ProjectReference Include="..\Domain\AuthService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

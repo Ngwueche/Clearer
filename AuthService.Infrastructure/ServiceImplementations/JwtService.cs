@@ -18,34 +18,32 @@ namespace AuthService.Infrastructure.ServiceImplementations
 
         public string GenerateToken(JwtDto user)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
+            //var expiry = int.TryParse(_config.GetSection("JWT:ExpireMin").Value, out int result);
+            var jwtToken = "";
 
-            var uniqueTokenId = Guid.CreateVersion7().ToString(); // append to track token
 
-            var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, uniqueTokenId),
-            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName} {user.OtherName}"),
-            new Claim("Role", user.Role ?? "Application User"),
-            new Claim("UserId", user.Id.ToString())
-        };
+            var claimList = new List<Claim>
+                {
+                    new(ClaimTypes.NameIdentifier, user.UserName),
+                    //new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Name, $"{user.FirstName} {user.LastName}"),
+                    new(ClaimTypes.Role, user.Role),
+                    new("Id", user.Id.ToString())
+                };
 
-            var token = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes),
-                signingCredentials: creds
-            );
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Audience = _jwtSettings.Audience,
+                Issuer = _jwtSettings.Issuer,
+                Subject = new ClaimsIdentity(claimList),
+                Expires = DateTime.UtcNow.AddMinutes(4000000),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
 
-            return jwt;
-            // Return token with GUID appended (for traceability only)
-            //return $"{jwt}.{uniqueTokenId}";
         }
     }
 

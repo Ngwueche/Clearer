@@ -13,11 +13,11 @@ namespace AuthService.Infrastructure.RepositoryImplementations
         {
         }
 
-        public void CreateUser(ApplicationUser adminRequest) => Create(adminRequest);
-        public void UpdateUser(ApplicationUser adminRequest) => Update(adminRequest);
+        public Task CreateUser(ApplicationUser adminRequest) => Create(adminRequest);
+        public Task UpdateUser(ApplicationUser adminRequest) => Update(adminRequest);
 
         public async Task<ApplicationUser> GetUserById(Guid id, bool trackStatus) => await FindByCondition(x => x.Id == id, trackStatus).Include(x => x.Role).FirstOrDefaultAsync();
-        public async Task<ApplicationUser> GetUserByUsernameAsync(string userName, bool trackStatus) => await FindByCondition(x => x.UserName == userName, trackStatus).Include(x => x.Role).FirstOrDefaultAsync();
+        public async Task<ApplicationUser> GetActiveUserByUsernameAsync(string userName, bool trackStatus) => await FindByCondition(x => x.UserName.ToLower() == userName.ToLower() && x.IsActive, trackStatus).Include(x => x.Role).FirstOrDefaultAsync();
 
         public async Task<string> DeactivateUserAccount(Guid id)
         {
@@ -27,6 +27,7 @@ namespace AuthService.Infrastructure.RepositoryImplementations
                 return "44";
             }
             user.IsActive = false;
+
             return "20";
         }
 

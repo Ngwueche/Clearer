@@ -1,12 +1,13 @@
-﻿using AuthService.Application.Interfaces;
+﻿using AuthService.Application.DTOs;
+using AuthService.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Authentication.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -15,20 +16,64 @@ namespace Authentication.API.Controllers
         {
             _authService = authService;
         }
-
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost("register")]
-        public async Task<IActionResult> Register(string username, string password, Guid role)
+        public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
-            var result = await _authService.RegisterAsync(username, password, role);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.RegisterAsync(dto);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.RefreshTokenAsync(dto.UserName, dto.RefreshToken);
+            return Ok(result);
+        }
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPost("deactivate-user")]
+        public async Task<IActionResult> DeactivateUser(string username)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.DeactivateUserAsync(username);
             return Ok(result);
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login([FromBody] SignDto dto)
         {
-            var result = await _authService.LoginAsync(username, password);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.LoginAsync(dto.UserName, dto.Password);
             return Ok(result);
         }
+
+        [AllowAnonymous]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(string userName)
+        {
+            var result = await _authService.LogOutAsync(userName);
+            return Ok(result);
+        }
+
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPost("get-roles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            var result = await _authService.GetRolesAsync();
+            return Ok(result);
+        }
+
     }
 }
