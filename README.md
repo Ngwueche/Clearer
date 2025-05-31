@@ -81,8 +81,8 @@ Update the database name in `appsettings.json` and run the application. The appl
 
 ```json
 {
-  "username": "johndoe",
-  "password": "Password123!"
+  "username": "Admin",
+  "password": "Admin123"
 }
 ```
 
@@ -110,7 +110,7 @@ Update the database name in `appsettings.json` and run the application. The appl
 
 ```json
 {
-  "username": "johndoe",
+  "username": "admin",
   "refreshToken": "01972551-583e-7d64-a0c8-15a5168aa99f"
 }
 ```
@@ -144,7 +144,7 @@ Update the database name in `appsettings.json` and run the application. The appl
   "firstName": "Wisdom",
   "lastName": "Ngwueche",
   "otherName": "Chukwuma",
-  "userName": "akuobu",
+  "userName": "user234",
   "password": "Qwerty",
   "roleId": "01972151-b379-74bc-9309-cadf2cbc24be"
 }
@@ -169,7 +169,7 @@ Update the database name in `appsettings.json` and run the application. The appl
 
 ```json
 {
-  "username": "johndoe"
+  "username": "user234"
 }
 ```
 
@@ -192,7 +192,7 @@ Update the database name in `appsettings.json` and run the application. The appl
 
 ```json
 {
-  "username": "johndoe"
+  "username": "user234"
 }
 ```
 
